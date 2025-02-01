@@ -4,11 +4,13 @@ import InstagramButton from './_components/InstagramButton';
 import GmbButton from './_components/GmbButton';
 import ManualButton from './_components/ManualButton';
 import InstagramView from './_components/InstagramView';
+import Error from '@components/Error';
 
 export default async function RootPage({ searchParams }) {
     const { code } = await searchParams;
     let display = null;
     let rawData = null;
+    let error = null;
 
     if (code) {
         const tokenRes = await fetch(process.env.NEXT_PUBLIC_INSTAGRAM_ACCESS_TOKEN_URI, {
@@ -26,18 +28,25 @@ export default async function RootPage({ searchParams }) {
         const tokenData = await tokenRes.json();
         const { user_id: userId, access_token: accessToken } = tokenData;
 
-        if (!userId || !accessToken) throw new Error('Failed to get User Id and Access Token!');
+        if (userId && accessToken) {
+            const uri = process.env.NEXT_PUBLIC_INSTAGRAM_MEDIA_URI
+                .replace('<INSTAGRAM_USER_ID>', userId)
+                .replace('<INSTAGRAM_ACCESS_TOKEN>', accessToken);
 
-        const uri = process.env.NEXT_PUBLIC_INSTAGRAM_MEDIA_URI
-            .replace('<INSTAGRAM_USER_ID>', userId)
-            .replace('<INSTAGRAM_ACCESS_TOKEN>', accessToken);
+            const res = await fetch(uri)
+            rawData = await res.json();
 
-        const res = await fetch(uri)
-        rawData = await res.json();
+            if (rawData.error) {
+                display = 'error';
+                error = 'Please try again later';
+            } else {
+                display = 'instagram';
+            }
+        } else {
+            display = 'error';
+            error = 'Failed to authenticate';
+        }
 
-        if (rawData.error) throw new Error(rawData.error.message);
-
-        display = 'instagram';
     }
 
     return (
@@ -57,6 +66,7 @@ export default async function RootPage({ searchParams }) {
             </header>
             <main className="mt-12">
                 { display === 'instagram' &&  <InstagramView rawData={rawData} /> }
+                { display === 'error' && <div className="w-fit mx-auto"><Error message={error} /></div> }
             </main>
         </MediumLayout>
     );
