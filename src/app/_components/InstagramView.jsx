@@ -17,14 +17,14 @@ export default function InstagramView({ rawData }) {
 
             do {
                 for (const { children } of data) {
-                    if (allImages.length >= process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) break;
+                    if (allImages.length >= +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) break;
                     for (const media of children.data) {
-                        if (allImages.length >= process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) break;
+                        if (allImages.length >= +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) break;
                         allImages.push(media);
                     }
                 }
 
-                if (next && allImages.length < process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) {
+                if (next && allImages.length < +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) {
                     try {
                         const res = await fetch(next);
                         const rawData = await res.json();
@@ -35,7 +35,7 @@ export default function InstagramView({ rawData }) {
                         console.error(error);
                     }
                 }
-            } while (next && allImages.length < process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH)
+            } while (next && allImages.length < +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH)
 
             setImages(allImages);
         }
@@ -80,7 +80,7 @@ export default function InstagramView({ rawData }) {
                 <MdKeyboardArrowRight onClick={nextPage} className={`text-xl ${images.length <= page * 10 && 'text-slate-500'} cursor-pointer`} />
                 <MdKeyboardDoubleArrowRight onClick={lastPage} className={`text-xl ${images.length <= page * 10 && 'text-slate-500'} cursor-pointer`} />
             </div>
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="mt-4 columns-2 md:columns-5 gap-x-4">
                 {
                     viewImages.map(({ id, media_url }) => (
                         <Image key={id} id={id} media={media_url} selected={selected[id]} clickHandler={toggleImage} />
