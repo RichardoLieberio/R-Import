@@ -3,9 +3,42 @@ import Link from '@components/Link';
 import InstagramButton from './_components/InstagramButton';
 import GmbButton from './_components/GmbButton';
 import ManualButton from './_components/ManualButton';
+import InstagramView from './_components/InstagramView';
 
 export default async function RootPage({ searchParams }) {
     const { code } = await searchParams;
+    let display = null;
+    let rawData = null;
+
+    if (code) {
+        const tokenRes = await fetch(process.env.NEXT_PUBLIC_INSTAGRAM_ACCESS_TOKEN_URI, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
+                client_secret: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_SECRET,
+                grant_type: 'authorization_code',
+                redirect_uri: process.env.NEXT_PUBLIC_APP_URI,
+                code,
+            }),
+        });
+
+        const tokenData = await tokenRes.json();
+        const { user_id: userId, access_token: accessToken } = tokenData;
+
+        if (!userId || !accessToken) throw new Error('Failed to get User Id and Access Token!');
+
+        const uri = process.env.NEXT_PUBLIC_INSTAGRAM_MEDIA_URI
+            .replace('<INSTAGRAM_USER_ID>', userId)
+            .replace('<INSTAGRAM_ACCESS_TOKEN>', accessToken);
+
+        const res = await fetch(uri)
+        rawData = await res.json();
+
+        if (rawData.error) throw new Error(rawData.error.message);
+
+        display = 'instagram';
+    }
 
     return (
         <MediumLayout>
@@ -22,6 +55,9 @@ export default async function RootPage({ searchParams }) {
                     <ManualButton />
                 </div>
             </header>
+            <main className="mt-12">
+                { display === 'instagram' &&  <InstagramView rawData={rawData} /> }
+            </main>
         </MediumLayout>
     );
 }
