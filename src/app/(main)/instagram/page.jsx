@@ -1,4 +1,3 @@
-import Error from '@components/Error';
 import ViewImages from '../_components/ViewImages';
 
 export default async function InstagramPage({ searchParams }) {
