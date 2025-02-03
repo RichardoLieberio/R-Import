@@ -33,8 +33,6 @@ export default function GmbPage() {
                         const response = await fetch(`/api/gmb/detail?placeId=${place_id}`)
                         const data = await response.json();
 
-                        console.log(data.data.result);
-
                         const photos = data.data?.result?.photos ?? [];
                         const photoObj = photos.map(({ photo_reference }) => ({
                             id: photo_reference,
