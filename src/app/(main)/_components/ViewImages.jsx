@@ -1,47 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight, MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight } from 'react-icons/md';
+import Error from '@components/Error';
 import Image from './Image';
 
-export default function InstagramView({ rawData }) {
-    const [ images, setImages ] = useState([]);
+export default function ViewImages({ error, images }) {
     const [ selected, setSelected ] = useState({});
     const [ page, setPage ] = useState(1);
-
-    useEffect(function () {
-        async function getImages() {
-            let allImages = [];
-            let data = rawData.data;
-            let next = rawData.paging.next;
-
-            do {
-                for (const { children } of data) {
-                    if (allImages.length >= +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) break;
-                    for (const media of children.data) {
-                        if (allImages.length >= +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) break;
-                        allImages.push(media);
-                    }
-                }
-
-                if (next && allImages.length < +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH) {
-                    try {
-                        const res = await fetch(next);
-                        const rawData = await res.json();
-
-                        data = rawData.data;
-                        next = rawData.paging.next;
-                    } catch (error) {
-                        console.error(error);
-                    }
-                }
-            } while (next && allImages.length < +process.env.NEXT_PUBLIC_MAX_MEDIA_LENGTH)
-
-            setImages(allImages);
-        }
-
-        getImages();
-    }, []);
 
     function firstPage() {
         setPage(1);
@@ -69,9 +36,19 @@ export default function InstagramView({ rawData }) {
         setSelected(newSelected);
     }
 
-    const viewImages = images.slice((page - 1) * 10, page * 10);
+    const viewImages = images?.slice((page - 1) * 10, page * 10);
 
-    return (
+    if (error) return (
+        <div className="w-fit mx-auto">
+            <Error message={error} />
+        </div>
+    );
+
+    if (images === null) return (
+        <div></div>
+    );
+
+    if (!!images.length) return (
         <>
             <div className="flex items-center justify-center gap-2">
                 <MdKeyboardDoubleArrowLeft onClick={firstPage} className={`text-xl ${page === 1 && 'text-slate-500'} cursor-pointer`} />
@@ -82,11 +59,15 @@ export default function InstagramView({ rawData }) {
             </div>
             <div className="mt-4 columns-2 md:columns-5 gap-x-4">
                 {
-                    viewImages.map(({ id, media_url }) => (
-                        <Image key={id} id={id} media={media_url} selected={selected[id]} clickHandler={toggleImage} />
+                    viewImages.map(({ id, media }) => (
+                        <Image key={id} id={id} media={media} selected={selected[id]} clickHandler={toggleImage} />
                     ))
                 }
             </div>
         </>
+    );
+
+    return (
+        <div className="text-center">No images found</div>
     );
 }

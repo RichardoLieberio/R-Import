@@ -1,10 +1,13 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Button from '@components/Button';
 
 export default function GmbButton() {
+    const router = useRouter();
+
     function clickHandler() {
-        console.log('Google My Business');
+        router.push('/gmb');
     }
 
     return (
